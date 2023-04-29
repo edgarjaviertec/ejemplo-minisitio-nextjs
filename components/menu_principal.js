@@ -9,10 +9,10 @@ export default function MenuPrincipal() {
         setVisible(!visible);
     }
     return <>
-        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
             <div className="container-fluid">
                 <Link href="/" legacyBehavior>
-                    <a className="navbar-brand">Mi sitio</a>
+                    <a className="navbar-brand d-flex align-items-center"><i className="fa-2x fa-solid fa-face-smile me-2"></i>Mi sitio</a>
                 </Link>
                 <button className="navbar-toggler"
                         type="button" onClick={alternarMenu}>

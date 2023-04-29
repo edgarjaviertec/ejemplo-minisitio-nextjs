@@ -114,10 +114,10 @@ export default function Contacto() {
 
     return <>
         <Head>
-            <title>Contacto</title>
+            <title>Página de contacto</title>
         </Head>
         <DefaultLayout>
-            <h1 className="text-danger mb-3">Página de contacto</h1>
+            <h1 className="h3 mb-3 text-success">Página de contacto</h1>
             <form onSubmit={enviarFormulario}>
                 <div className="mb-3">
                     <label htmlFor="nombre" className="form-label">Nombre</label>
