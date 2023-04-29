@@ -12,7 +12,7 @@ export default function MenuPrincipal() {
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
             <div className="container-fluid">
                 <Link href="/" legacyBehavior>
-                    <a className="navbar-brand">Expand at lg</a>
+                    <a className="navbar-brand">Mi sitio</a>
                 </Link>
                 <button className="navbar-toggler"
                         type="button" onClick={alternarMenu}>

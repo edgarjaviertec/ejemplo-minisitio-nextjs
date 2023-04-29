@@ -7,7 +7,7 @@ export default function Home() {
         <title>Create Next App</title>
       </Head>
       <DefaultLayout>
-        <h1 className="text-danger">Hola mundo</h1>
+        <h1 className="text-danger">Página de inicio</h1>
       </DefaultLayout>
     </>
   )

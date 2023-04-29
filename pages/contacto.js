@@ -2,7 +2,6 @@ import Head from "next/head";
 import DefaultLayout from "@/layouts/default_layout";
 import {useState, useEffect} from "react";
 import * as Yup from "yup";
-
 export default function Contacto() {
 
     const [datos, setDatos] = useState({
@@ -11,17 +10,68 @@ export default function Contacto() {
         telefono: ""
     });
 
-    const [camposTocados, setCamposTocados] = useState([]);
-
-    useEffect(() => {
-        validar();
-    }, [datos, camposTocados]);
-
+    const [camposActivos, setCamposActivos] = useState([]);
     const [errores, setErrores] = useState({});
-
     const [enviando, setEnviando] = useState(false);
 
-    async function enviarAZapier(datos) {
+    useEffect(() => {
+        validarCamposActivos();
+    }, [datos, camposActivos]);
+
+    const mensajes = {
+        requerido: "Este campo es obligatorio.",
+        email: "Correo electrónico inválido.",
+        minimo: "Este campo debe tener al menos 10 dígitos",
+    };
+
+    let reglasValidacion = Yup.object().shape({
+        nombre: Yup.string().required(mensajes.requerido),
+        email: Yup.string().required(mensajes.requerido).email(mensajes.email),
+        telefono: Yup.string().trim().transform(valor => valor === '' ? undefined : valor).required(mensajes.requerido).min(10, mensajes.minimo)
+    });
+    function permitirSoloNumeros(evento) {
+        if (evento.which < 48 || evento.which > 57) {
+            evento.preventDefault();
+        }
+    }
+    function marcarComoActivo(evento) {
+        if (!camposActivos.includes(evento.target.name)) {
+            setCamposActivos([
+                ...camposActivos,
+                evento.target.name
+            ])
+        }
+    }
+    function actualizarDatos(evento) {
+        setDatos({
+            ...datos,
+            [evento.target.name]: evento.target.value
+        });
+    }
+
+    function validarCamposActivos() {
+        let errores = {};
+        try {
+            reglasValidacion.validateSync(datos, {abortEarly: false});
+            setErrores({});
+        } catch (erroresValidacion) {
+            erroresValidacion.inner.map(error => {
+                errores[error.path] = error.message;
+            });
+            const erroresCamposActivos = Object.keys(errores).filter((key) => {
+                return camposActivos.includes(key);
+            }).reduce((acumulador, key) => {
+                if (!acumulador[key]) {
+                    acumulador[key] = errores[key]
+                }
+                return acumulador
+            }, {});
+            setErrores(erroresCamposActivos);
+            console.log("Errores de validación:");
+            console.log(erroresValidacion);
+        }
+    }
+    async function enviarZapier(datos) {
         const respuesta = await fetch('https://hooks.zapier.com/hooks/catch/11760187/3uge0r8/', {
             method: 'POST',
             mode: 'no-cors',
@@ -33,69 +83,17 @@ export default function Contacto() {
         });
         return respuesta;
     };
-
-    const mensajes = {
-        requerido: "Este campo es obligatorio.",
-        email: "Correo electrónico inválido.",
-        minimo: "Este campo debe tener al menos 10 dígitos",
-    };
-
-    let validationSchema = Yup.object().shape({
-        nombre: Yup.string().required(mensajes.requerido),
-        email: Yup.string().required(mensajes.requerido).email(mensajes.email),
-        telefono: Yup.string().trim().transform(valor => valor === '' ? undefined : valor).required(mensajes.requerido).min(10, mensajes.minimo)
-    });
-
-    function actualizarDatos(evento) {
-        setDatos({
-            ...datos,
-            [evento.target.name]: evento.target.value
-        });
-    }
-
-    function campoTocado(evento) {
-        if (!camposTocados.includes(evento.target.name)) {
-            setCamposTocados([
-                ...camposTocados,
-                evento.target.name
-            ])
-        }
-    }
-
-    function validar() {
-        let errores = {};
-        try {
-            validationSchema.validateSync(datos, {abortEarly: false});
-            setErrores({});
-        } catch (erroresValidacion) {
-            erroresValidacion.inner.map(error => {
-                errores[error.path] = error.message;
-            });
-            const erroresCamposTocados = Object.keys(errores).filter((key) => {
-                return camposTocados.includes(key);
-            }).reduce((acumulador, key) => {
-                if (!acumulador[key]) {
-                    acumulador[key] = errores[key]
-                }
-                return acumulador
-            }, {});
-            setErrores(erroresCamposTocados);
-            console.log("Errores de validación:");
-            console.log(erroresValidacion);
-        }
-    }
-
-    function manejarSubmit(evento) {
+    function enviarFormulario(evento) {
         evento.preventDefault();
-        let errores = {};
+        let erroresFormulario = {};
         try {
-            validationSchema.validateSync(datos, {abortEarly: false});
+            reglasValidacion.validateSync(datos, {abortEarly: false});
             setErrores({});
             setEnviando(true);
-            enviarAZapier(datos).then((respuesta) => {
+            enviarZapier(datos).then((respuesta) => {
                 console.log("Respuesta Zapier");
                 console.log(respuesta);
-                window.location.href = "https://preventa.elgranancira.com/gracias/";
+                window.location.href = "gracias/";
                 setEnviando(false);
             }).catch((error) => {
                 console.log("Error Zapier:");
@@ -104,19 +102,13 @@ export default function Contacto() {
             });
         } catch (erroresValidacion) {
             erroresValidacion.inner.map(error => {
-                errores[error.path] = error.message;
+                erroresFormulario[error.path] = error.message;
             });
-            setErrores(errores);
-            const camposTocados = Object.keys(errores);
-            setCamposTocados(camposTocados);
+            setErrores(erroresFormulario);
+            const camposActivos = Object.keys(erroresFormulario);
+            setCamposActivos(camposActivos);
             console.log("Errores de validación:");
-            console.log(errores);
-        }
-    }
-
-    function evitarLetras(evento) {
-        if (evento.which < 48 || evento.which > 57) {
-            evento.preventDefault();
+            console.log(erroresFormulario);
         }
     }
 
@@ -125,8 +117,8 @@ export default function Contacto() {
             <title>Contacto</title>
         </Head>
         <DefaultLayout>
-            <h1 className="text-danger mb-3">Contacto</h1>
-            <form onSubmit={manejarSubmit}>
+            <h1 className="text-danger mb-3">Página de contacto</h1>
+            <form onSubmit={enviarFormulario}>
                 <div className="mb-3">
                     <label htmlFor="nombre" className="form-label">Nombre</label>
                     <input
@@ -134,8 +126,8 @@ export default function Contacto() {
                         className={`form-control ${errores.nombre ? "is-invalid" : ""}`}
                         id="nombre"
                         name="nombre"
-                        onKeyUp={campoTocado}
-                        onBlur={campoTocado}
+                        onKeyUp={marcarComoActivo}
+                        onBlur={marcarComoActivo}
                         onChange={actualizarDatos}
                         value={datos.nombre}
                     />
@@ -148,8 +140,8 @@ export default function Contacto() {
                         className={`form-control ${errores.email ? "is-invalid" : ""}`}
                         id="email"
                         name="email"
-                        onKeyUp={campoTocado}
-                        onBlur={campoTocado}
+                        onKeyUp={marcarComoActivo}
+                        onBlur={marcarComoActivo}
                         onChange={actualizarDatos}
                         value={datos.email}
                     />
@@ -162,9 +154,9 @@ export default function Contacto() {
                            maxLength="10"
                            id="telefono"
                            name="telefono"
-                           onKeyPress={evitarLetras}
-                           onKeyUp={campoTocado}
-                           onBlur={campoTocado}
+                           onKeyPress={permitirSoloNumeros}
+                           onKeyUp={marcarComoActivo}
+                           onBlur={marcarComoActivo}
                            onChange={actualizarDatos}
                     />
                     {errores.telefono ? <div className="invalid-feedback">{errores.telefono}</div> : null}
