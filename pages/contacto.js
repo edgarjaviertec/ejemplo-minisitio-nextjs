@@ -72,7 +72,7 @@ export default function Contacto() {
         }
     }
     async function enviarZapier(datos) {
-        const respuesta = await fetch('https://hooks.zapier.com/hooks/catch/11760187/3uge0r8/', {
+        const respuesta = await fetch('https://hooks.zapier.com/ejemplo/1234567/abcdefg/', {
             method: 'POST',
             mode: 'no-cors',
             headers: {
